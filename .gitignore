@@ -33,10 +33,9 @@ env/
 *.log
 *.pot
 *.pyc
-db.sqlite3
-media/
-media/*
-/staticfiles/
+
+
+
 
 # If using django-environ or similar
 .env
