@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<style>
+  .db-topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+  .stat-card { background: #f8f9fa; border-radius: 8px; padding: 1rem; }
+  .stat-label { font-size: 12px; color: #6c757d; margin-bottom: 6px; }
+  .stat-val { font-size: 26px; font-weight: 600; color: #212529; }
+  .stat-sub { font-size: 11px; color: #28a745; margin-top: 4px; }
+  .chart-row { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; margin-bottom: 1.5rem; }
+  .chart-card { background: #fff; border: 1px solid #dee2e6; border-radius: 10px; padding: 1rem 1.25rem; }
+  .chart-title { font-size: 13px; font-weight: 600; margin: 0 0 12px; }
+  .legend { display: flex; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
+  .legend span { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #6c757d; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; display:inline-block; }
+  .recent-card { background: #fff; border: 1px solid #dee2e6; border-radius: 10px; padding: 1rem 1.25rem; }
+  .recent-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f1f1; }
+  .recent-row:last-child { border-bottom: none; }
+  .badge-pub { background: #eaf3de; color: #3b6d11; border-radius: 20px; padding: 2px 10px; font-size: 11px; }
+  .badge-draft { background: #faeeda; color: #854f0b; border-radius: 20px; padding: 2px 10px; font-size: 11px; }
+  @media (max-width: 768px) { .chart-row { grid-template-columns: 1fr; } }
+</style>
+
+<div class="row">
+  {% include "dashboard/sidebar.html" %}
+
+  <div class="col-md-9">
+
+    <!-- Top bar -->
+    <div class="db-topbar">
+      <h4 style="margin:0;">Dashboard</h4>
+      <small class="text-muted">
+        <i class="fa fa-user-circle"></i> Logged in as <strong>{{ user.username }}</strong>
+      </small>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label"><i class="fa fa-list"></i> Total Categories</div>
+        <div class="stat-val">{{ category_count }}</div>
+        <div class="stat-sub">↑ active</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label"><i class="fa fa-newspaper-o"></i> Total Posts</div>
+        <div class="stat-val">{{ blog_count }}</div>
+        <div class="stat-sub">↑ published</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label"><i class="fa fa-eye"></i> Total Views</div>
+        <div class="stat-val">{{ view_count|default:"0" }}</div>
+        <div class="stat-sub">all time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label"><i class="fa fa-comments"></i> Comments</div>
+        <div class="stat-val">{{ comment_count|default:"0" }}</div>
+        <div class="stat-sub">total</div>
+      </div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="chart-row">
+      <div class="chart-card">
+        <p class="chart-title">Posts published — last 6 months</p>
+        <div class="legend">
+          <span><span class="legend-dot" style="background:#378add"></span> Posts</span>
+        </div>
+        <div style="position:relative; height:200px;">
+          <canvas id="barChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <p class="chart-title">Posts by category</p>
+        <div style="position:relative; height:200px;">
+          <canvas id="doughnut"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent posts -->
+    <div class="recent-card">
+      <p class="chart-title">Recent posts</p>
+      {% for post in recent_posts %}
+      <div class="recent-row">
+        <div>
+          <div style="font-size:13px;">{{ post.title }}</div>
+          
+          <div style="font-size:11px; color:#999;">{{ post.created_at|date:"d M Y" }}</div>
+        </div>
+        {% if post.status == 'draft' %}
+          <span class="badge-pub">Draft</span>
+        {% else %}
+          <span class="badge-draft">Publish</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+  // Bar chart — monthly posts data Django se pass karo
+  const monthlyData = {{ monthly_posts| default:"[8,12,7,15,10,14]"|safe }};
+  new Chart(document.getElementById('barChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Jan','Feb','Mar','Apr','May','Jun'],
+      datasets: [{ label:'Posts', data: monthlyData, backgroundColor:'#378add', borderRadius:4 }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ display:false } },
+      scales:{
+        x:{ grid:{ display:false } },
+        y:{ grid:{ color:'rgba(0,0,0,0.05)' } }
+      }
+    }
+  });
+
+  // Doughnut — category names + counts Django se pass karo
+  const catLabels = {{ cat_labels|default:'["Tech","Travel","Food","Other"]'|safe }};
+  const catData   = {{ cat_data|default:'[36,24,20,20]'|safe }};
+  new Chart(document.getElementById('doughnut'), {
+    type: 'doughnut',
+    data: {
+      labels: catLabels,
+      datasets:[{ data: catData, backgroundColor:['#378add','#1d9e75','#ef9f27','#d4537e'], borderWidth:0 }]
+    },
+    options: { responsive:true, maintainAspectRatio:false, cutout:'65%' }
+  });
+</script>
+
+{% endblock content %}

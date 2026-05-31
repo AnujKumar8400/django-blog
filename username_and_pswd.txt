@@ -1,0 +1,7 @@
+name = > anujblog
+pswd => anujblog123
+
+
+manager ka password = @manager840076
+
+editor usernam ka password = @editor840076

@@ -1,0 +1,213 @@
+<!-- Header Part -->
+
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blogs News</title>
+    <link href="https://getbootstrap.com/docs/4.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Playfair+Display:700,900" rel="stylesheet">
+    <link href="{% static 'css/blog.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+  </head>
+<body>
+    <div class="container-fluid" style="width: 100%;">
+      <style>
+  .bh-wrap {
+    background: linear-gradient(135deg, #6c4fa3 0%, #8b6bbf 60%, #a87dd4 100%);
+    border-radius: 16px;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    box-sizing: border-box;
+    width: 100%;
+  }
+  .bh-logo {
+    font-size: 20px;
+    font-weight: 500;
+    font-style: italic;
+    color: #fff;
+    text-decoration: none;
+    background: rgba(255,255,255,0.18);
+    padding: 8px 18px;
+    border-radius: 30px;
+    border: 1px solid rgba(255,255,255,0.3);
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+    transition: background 0.2s;
+  }
+  .bh-logo:hover { background: rgba(255,255,255,0.28); }
+  .bh-search {
+    display: flex;
+    align-items: center;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 30px;
+    overflow: hidden;
+    flex: 1;
+    max-width: 320px;
+  }
+  .bh-search-icon {
+    padding: 0 10px 0 14px;
+    color: rgba(255,255,255,0.7);
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+  }
+  .bh-search input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-size: 14px;
+    padding: 9px 4px;
+    flex: 1;
+    min-width: 0;
+  }
+  .bh-search input::placeholder { color: rgba(255,255,255,0.55); }
+  .bh-search-btn {
+    background: rgba(255,255,255,0.25);
+    border: none;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 9px 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-left: 1px solid rgba(255,255,255,0.25);
+  }
+  .bh-search-btn:hover { background: rgba(255,255,255,0.38); }
+  .bh-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+  }
+  .bh-btn {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 7px 18px;
+    border-radius: 30px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    border: 1.5px solid transparent;
+  }
+  .bh-btn-login {
+    background: #fff;
+    color: #6c4fa3;
+    border-color: #fff;
+  }
+  .bh-btn-login:hover { background: #f0e8ff; border-color: #f0e8ff; }
+  .bh-btn-register {
+    background: transparent;
+    color: #fff;
+    border-color: rgba(255,255,255,0.6);
+  }
+  .bh-btn-register:hover { background: rgba(255,255,255,0.15); border-color: #fff; }
+  .bh-link {
+    color: rgba(255,255,255,0.9);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    padding: 7px 14px;
+    border-radius: 30px;
+    transition: background 0.2s;
+  }
+  .bh-link:hover { background: rgba(255,255,255,0.15); color: #fff; }
+  .bh-divider {
+    width: 1px;
+    height: 18px;
+    background: rgba(255,255,255,0.3);
+  }
+</style>
+
+<!-- Tabler Icons CDN (add this in your base.html <head> if not already) -->
+<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"> -->
+
+<header class="bh-wrap">
+
+  <!-- Logo -->
+  <a class="bh-logo" href="/">✦ Blog News</a>
+
+  <!-- Search -->
+  <form action="{% url 'search' %}" method="GET" class="bh-search">
+    <span class="bh-search-icon">
+      <i class="ti ti-search"></i>
+    </span>
+    <input
+      type="text"
+      name="search"
+      value="{{ search }}"
+      placeholder="Search articles..."
+      aria-label="Search articles"
+    />
+    <button class="bh-search-btn" type="submit">Go</button>
+  </form>
+
+  <!-- Auth Actions -->
+  <div class="bh-actions">
+    {% if not user.is_authenticated %}
+      <a class="bh-btn bh-btn-login" href="{% url 'login' %}">Login</a>
+      <a class="bh-btn bh-btn-register" href="{% url 'register' %}">Register</a>
+    {% else %}
+      <a class="bh-link" href="{% url 'dashboard' %}">
+        <i class="ti ti-layout-dashboard" style="font-size:15px; vertical-align:-2px; margin-right:4px;"></i>Dashboard
+      </a>
+      <div class="bh-divider"></div>
+      <a class="bh-link" href="{% url 'logout' %}">
+        <i class="ti ti-logout" style="font-size:15px; vertical-align:-2px; margin-right:4px;"></i>Logout
+      </a>
+    {% endif %}
+  </div>
+
+</header>
+
+      <div class="nav-scroller py-1 mb-2">
+        <nav class="nav d-flex justify-content-between">
+          {% for cat in categories %}
+          <a class="p-2 text-muted" href="{% url 'post_by_category' cat.id %}">{{cat.category_name}}</a>
+          {% endfor %}
+          
+        </nav>
+      </div>
+
+
+<!-- Main Content Part-->
+
+{% block content %}
+  
+{% endblock content %}
+
+<!-- Footer Part -->
+
+<footer class="blog-footer">
+  <p style="text-align: center; background-color: rgb(197, 197, 199); padding: 15px 0 15px 0;">Django blog built with by 💖<a href="#">Anuj  Kumar</a></p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function confirmDelete() {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You want to delete this post!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById("deleteForm").submit();
+        }
+    });
+}
+</script>
+</body>
+</html>
+

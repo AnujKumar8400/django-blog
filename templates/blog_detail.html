@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <!-- Page content-->
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Post content-->
+            <article>
+                <!-- Post header-->
+                <header class="mb-4">
+                    <!-- Post title-->
+                    <h1 class="fw-bolder mb-1">{{post.title}}!</h1>
+                    <!-- Post meta content-->
+                    <div class="text-muted fst-italic mb-2">{{ post.created_at | timesince}} By {{ post.author}}</div>
+                    <!-- Post category-->
+                    <a class="badge bg-earning text-decoration-none text-light" href="#!">{{post.category}}</a>
+                </header>
+                <!-- Preview image figure-->
+                <figure class="mb-4"><img class="img-fluid rounded" src="{{post.featured_image.url}}" alt="..." /></figure>
+                <!-- Post content-->
+                <section class="mb-5">
+                    <p class="fs-5 mb-4">{{post.short_description}}.</p>
+                    <p class="fs-5 mb-4">{{post.blog_body}}.</p>
+
+                    <!-- comments -->
+                     <h4>Comments ({{comment_count}})</h4>
+                     {% if comments %}
+                     {% for cmt in comments %}
+                    <div class="card mt-2">
+                        <div class="card-body">
+                            <p class="card-text mb-0">{{cmt}}</p>
+                            <span>
+                                <small>By {{cmt.user}}</small>
+                                <small> | {{cmt.created_at | timesince}}</small>
+                        </span>
+                        </div>
+                    </div>
+                       
+                     {% endfor %}
+                     <!-- here add comment form -->
+                     {% else %}
+                     <h5>No comment yet</h5>
+                     {% endif %}
+                     <div class="form-group">
+                        {% if user.is_authenticated %}
+                        <form action="" method="POST">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <textarea name="comment" id="" placeholder="Write your comment..." class="form-control mt-4"></textarea>
+                                <button type="submit" value="submit" class="btn btn-primary mt-2">Submit</button>
+                            </div>
+                        </form>
+                        {% else %}
+                        <p>Please <span><a href="{% url 'login' %}">login</a></span> first , then write your comment</p>
+                        {% endif %}
+                     </div>
+                    </section>
+            </article>
+        </div>
+        <!-- Side widgets-->
+        <div class="col-lg-4">
+           
+            <!-- Categories widget-->
+            <div class="card mb-4 p-3">
+                <h4 class="font-italic">Categories</h4>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <ul class="list-unstyled mb-0">
+                                {% for cat in categories %}
+                                  
+                                
+                                <li><a href="{% url 'post_by_category' cat.id %}">{{cat.category_name}}</a></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+            <!-- Side widget-->
+            <div class="card mb-4 p-3">
+                <h4 class="font-italic">Follow Us</h4>
+                <ol class="list-unstyled">
+                    {% for sm in social_media %}
+                      
+                    
+                    <li><a href="{{sm.link}}">{{sm.plateform}}</a></li>
+                    {% endfor %}
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

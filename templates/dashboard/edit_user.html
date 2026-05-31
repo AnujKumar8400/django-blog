@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+{% load crispy_forms_tags %}
+
+<div class="row">
+    <!-- left sidebar  -->
+    <!-- load sidebar here -->
+    {% include "dashboard/sidebar.html" %}
+
+    <!-- Right side content -->
+    <div class="col-md-9">
+        {% if perms.auth.add_user %}
+        <h3>Edit  User</h3>
+
+
+        <form action="{% url 'edit_user' user.id %}" method="POST" style="width: 500px;">
+            {% csrf_token %}
+            {{ forms | crispy }}
+            <button type="submit" class="btn btn-warning">submit</button>
+        </form>
+        <br>
+        {% else %}
+        <h4>You do not have permossion to view this page </h4>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock content %}
