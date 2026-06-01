@@ -1,96 +1,320 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <!-- Page content-->
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-lg-8">
-            <!-- Post content-->
-            <article>
-                <!-- Post header-->
-                <header class="mb-4">
-                    <!-- Post title-->
-                    <h1 class="fw-bolder mb-1">{{post.title}}!</h1>
-                    <!-- Post meta content-->
-                    <div class="text-muted fst-italic mb-2">{{ post.created_at | timesince}} By {{ post.author}}</div>
-                    <!-- Post category-->
-                    <a class="badge bg-earning text-decoration-none text-light" href="#!">{{post.category}}</a>
-                </header>
-                <!-- Preview image figure-->
-                <figure class="mb-4"><img class="img-fluid rounded" src="{{post.featured_image.url}}" alt="..." /></figure>
-                <!-- Post content-->
-                <section class="mb-5">
-                    <p class="fs-5 mb-4">{{post.short_description}}.</p>
-                    <p class="fs-5 mb-4">{{post.blog_body}}.</p>
 
-                    <!-- comments -->
-                     <h4>Comments ({{comment_count}})</h4>
-                     {% if comments %}
-                     {% for cmt in comments %}
-                    <div class="card mt-2">
-                        <div class="card-body">
-                            <p class="card-text mb-0">{{cmt}}</p>
-                            <span>
-                                <small>By {{cmt.user}}</small>
-                                <small> | {{cmt.created_at | timesince}}</small>
-                        </span>
-                        </div>
-                    </div>
-                       
-                     {% endfor %}
-                     <!-- here add comment form -->
-                     {% else %}
-                     <h5>No comment yet</h5>
-                     {% endif %}
-                     <div class="form-group">
-                        {% if user.is_authenticated %}
-                        <form action="" method="POST">
-                            {% csrf_token %}
-                            <div class="form-group">
-                                <textarea name="comment" id="" placeholder="Write your comment..." class="form-control mt-4"></textarea>
-                                <button type="submit" value="submit" class="btn btn-primary mt-2">Submit</button>
-                            </div>
-                        </form>
-                        {% else %}
-                        <p>Please <span><a href="{% url 'login' %}">login</a></span> first , then write your comment</p>
-                        {% endif %}
-                     </div>
-                    </section>
-            </article>
+<style>
+  * { box-sizing: border-box; }
+
+  .detail-wrapper {
+    max-width: 1100px;
+    margin: 40px auto;
+    padding: 0 16px;
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 36px;
+    align-items: start;
+  }
+  @media (max-width: 768px) {
+    .detail-wrapper { grid-template-columns: 1fr; }
+  }
+
+  /* ── Article Header ── */
+  .post-category {
+    display: inline-block;
+    background: #ede8f5;
+    color: #6c4fa3;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 30px;
+    text-decoration: none;
+    margin-bottom: 16px;
+  }
+  .post-category:hover { background: #ddd4f0; }
+
+  .post-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a1133;
+    line-height: 1.3;
+    margin: 0 0 14px;
+  }
+
+  .post-meta {
+    font-size: 0.83rem;
+    color: #9e93b8;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .post-meta .dot { opacity: 0.4; }
+
+  /* ── Featured Image ── */
+  .post-image {
+    width: 100%;
+    border-radius: 18px;
+    object-fit: cover;
+    max-height: 420px;
+    display: block;
+    margin-bottom: 32px;
+  }
+
+  /* ── Body Text ── */
+  .post-body p {
+    font-size: 1.05rem;
+    line-height: 1.85;
+    color: #3b3155;
+    margin-bottom: 20px;
+  }
+
+  /* ── Divider ── */
+  .section-divider {
+    border: none;
+    border-top: 1px solid #ede8f5;
+    margin: 36px 0 28px;
+  }
+
+  /* ── Comments ── */
+  .comments-heading {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1a1133;
+    margin: 0 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .comments-count {
+    background: #ede8f5;
+    color: #6c4fa3;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 30px;
+  }
+
+  .comment-card {
+    background: #faf9fd;
+    border: 1px solid #ede8f5;
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+  }
+  .comment-card p {
+    font-size: 0.93rem;
+    color: #3b3155;
+    margin: 0 0 8px;
+    line-height: 1.6;
+  }
+  .comment-meta {
+    font-size: 0.78rem;
+    color: #b0a5cc;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .comment-meta .dot { opacity: 0.4; }
+
+  .no-comments {
+    text-align: center;
+    padding: 28px;
+    background: #faf9fd;
+    border-radius: 14px;
+    border: 1px dashed #ddd6f0;
+    color: #b0a5cc;
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+  }
+
+  /* ── Comment Form ── */
+  .comment-form-box {
+    background: #fff;
+    border: 1px solid #ede8f5;
+    border-radius: 16px;
+    padding: 24px;
+    margin-top: 20px;
+  }
+  .comment-form-box h5 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1a1133;
+    margin: 0 0 14px;
+  }
+  .comment-form-box textarea {
+    width: 100%;
+    border: 1.5px solid #ddd6f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 0.92rem;
+    color: #1a1133;
+    background: #faf9fd;
+    resize: vertical;
+    min-height: 100px;
+    font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  .comment-form-box textarea:focus {
+    border-color: #8b6bbf;
+    box-shadow: 0 0 0 3px rgba(139,107,191,0.15);
+    background: #fff;
+  }
+  .comment-form-box textarea::placeholder { color: #c2b8d8; }
+  .comment-submit {
+    margin-top: 12px;
+    padding: 9px 24px;
+    background: linear-gradient(135deg, #8b6bbf, #6c4fa3);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+  }
+  .comment-submit:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  .login-prompt {
+    background: #faf9fd;
+    border: 1px solid #ede8f5;
+    border-radius: 12px;
+    padding: 16px 20px;
+    font-size: 0.9rem;
+    color: #9e93b8;
+    margin-top: 20px;
+  }
+  .login-prompt a { color: #7c5cbf; font-weight: 600; text-decoration: none; }
+  .login-prompt a:hover { text-decoration: underline; }
+
+  /* ── Sidebar ── */
+  .sidebar-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #ede8f5;
+    padding: 22px 20px;
+    margin-bottom: 20px;
+  }
+  .sidebar-card h4 {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #8b6bbf;
+    border-left: 4px solid #8b6bbf;
+    padding-left: 10px;
+    margin: 0 0 16px;
+  }
+  .sidebar-card ul,
+  .sidebar-card ol {
+    list-style: none;
+    padding: 0; margin: 0;
+  }
+  .sidebar-card li {
+    padding: 8px 0;
+    border-bottom: 1px solid #f3effe;
+    font-size: 0.88rem;
+  }
+  .sidebar-card li:last-child { border-bottom: none; }
+  .sidebar-card li a {
+    color: #5a3fa0;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.15s;
+  }
+  .sidebar-card li a:hover { color: #3b2070; }
+</style>
+
+<div class="detail-wrapper">
+
+  <!-- ── Main Article ── -->
+  <main>
+    <article>
+
+      <a class="post-category" href="#!">{{ post.category }}</a>
+
+      <h1 class="post-title">{{ post.title }}</h1>
+
+      <div class="post-meta">
+        <span>{{ post.created_at|timesince }} ago</span>
+        <span class="dot">•</span>
+        <span>By <strong style="color:#6c4fa3;">{{ post.author }}</strong></span>
+      </div>
+
+      <figure style="margin:0 0 32px;">
+        <img class="post-image" src="{{ post.featured_image.url }}" alt="{{ post.title }}" />
+      </figure>
+
+      <section class="post-body">
+        <p>{{ post.short_description }}</p>
+        <p>{{ post.blog_body }}</p>
+      </section>
+
+      <hr class="section-divider">
+
+      <!-- ── Comments ── -->
+      <div class="comments-heading">
+        Comments
+        <span class="comments-count">{{ comment_count }}</span>
+      </div>
+
+      {% if comments %}
+        {% for cmt in comments %}
+        <div class="comment-card">
+          <p>{{ cmt }}</p>
+          <div class="comment-meta">
+            <span>{{ cmt.user }}</span>
+            <span class="dot">•</span>
+            <span>{{ cmt.created_at|timesince }} ago</span>
+          </div>
         </div>
-        <!-- Side widgets-->
-        <div class="col-lg-4">
-           
-            <!-- Categories widget-->
-            <div class="card mb-4 p-3">
-                <h4 class="font-italic">Categories</h4>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-sm-6">
-                            <ul class="list-unstyled mb-0">
-                                {% for cat in categories %}
-                                  
-                                
-                                <li><a href="{% url 'post_by_category' cat.id %}">{{cat.category_name}}</a></li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        
-                    </div>
-                </div>
-            </div>
-            <!-- Side widget-->
-            <div class="card mb-4 p-3">
-                <h4 class="font-italic">Follow Us</h4>
-                <ol class="list-unstyled">
-                    {% for sm in social_media %}
-                      
-                    
-                    <li><a href="{{sm.link}}">{{sm.plateform}}</a></li>
-                    {% endfor %}
-                </ol>
-            </div>
-        </div>
+        {% endfor %}
+      {% else %}
+        <div class="no-comments">No comments yet — be the first to share your thoughts!</div>
+      {% endif %}
+
+      <!-- ── Comment Form ── -->
+      {% if user.is_authenticated %}
+      <div class="comment-form-box">
+        <h5>Leave a comment</h5>
+        <form action="" method="POST">
+          {% csrf_token %}
+          <textarea name="comment" placeholder="Write your comment..."></textarea>
+          <button type="submit" value="submit" class="comment-submit">Post Comment</button>
+        </form>
+      </div>
+      {% else %}
+      <div class="login-prompt">
+        Please <a href="{% url 'login' %}">sign in</a> to leave a comment.
+      </div>
+      {% endif %}
+
+    </article>
+  </main>
+
+  <!-- ── Sidebar ── -->
+  <aside>
+    <div class="sidebar-card">
+      <h4>Categories</h4>
+      <ul>
+        {% for cat in categories %}
+        <li><a href="{% url 'post_by_category' cat.id %}">{{ cat.category_name }}</a></li>
+        {% endfor %}
+      </ul>
     </div>
+
+    <div class="sidebar-card">
+      <h4>Follow Us</h4>
+      <ol>
+        {% for sm in social_media %}
+        <li><a href="{{ sm.link }}">{{ sm.plateform }}</a></li>
+        {% endfor %}
+      </ol>
+    </div>
+  </aside>
+
 </div>
+
 {% endblock content %}
